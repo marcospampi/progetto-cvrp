@@ -2,6 +2,9 @@ import sys
 
 
 class Instance:
+	"""
+	Describes an of the CVRP
+	"""
 	def __init__(self,
 		name: str,
 		comment: str,
@@ -11,7 +14,7 @@ class Instance:
 		author: str,
 		optimal_trucks: int,
 		optimal_value: int,
-		node_coords: dict[int, (int, int)],
+		node_coords: dict[int, tuple[int, int]],
 		node_demand: dict[int, int],
 		depot_node: int,
 	):
@@ -28,7 +31,10 @@ class Instance:
 		self.depot_node = depot_node
 
 	@staticmethod
-	def load(path: str):
+	def load_vrp(path: str):
+		"""
+		Loads a VRP file
+		"""
 		name = None
 		comment = None
 		dimension = None
@@ -86,7 +92,7 @@ class Instance:
 							raise Exception("NODE_COORD_SECTION red before DIMENSION")
 						for i in range(dimension):
 
-							index, x, y = tuple( map(int,next(lines).strip().split(' ')))
+							index, x, y = tuple( map(float,next(lines).strip().split(' ')))
 							node_coords[index] = (x,y)
 					case 'DEMAND_SECTION':
 						if dimension is None:
