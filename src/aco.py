@@ -30,7 +30,7 @@ class ACO(BaseSolver):
 		best_so_far = 0
 		for gen in range(generations):
 			best_solution, tau, eta = self._run_generation(tau, eta, best_so_far)
-			best_so_far = np.max(best_so_far, best_solution.fitness)
+			best_so_far = max([best_so_far, best_solution.fitness])
 			yield best_solution
 
 	def _run_generation(self, tau: np.ndarray, eta: np.ndarray, best_so_far: float):

@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 class Solution:
 	routes: list[list[int]]
@@ -24,3 +23,10 @@ class Solution:
 				yield (i,j)
 	def number_of_trucks(self):
 		return len(self.routes)
+
+
+
+
+
+
+

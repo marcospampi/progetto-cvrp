@@ -6,6 +6,7 @@ import numpy as np
 from src.aco import ACO
 from src.instance import Instance
 from src.base_solver import BaseSolver
+from src.utils import show_solution
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +24,7 @@ if __name__ == "__main__":
 
     instance = Instance.load_vrp(path)
 
-    solver = ACO(instance, ants=30, alpha = 1.0, beta = 3.0, rho=.2)
+    solver = ACO(instance, ants=50, alpha = 10, beta = 10, rho=.1)
     evaluations = int(1e4)
     cost, fitness, trucks = [],[], []
     for i, sol in enumerate(solver.run(evaluations=evaluations)):
@@ -42,4 +43,6 @@ if __name__ == "__main__":
     ax3.hist(trucks)
     print(f"Best cost {min(cost)}, best fitness {max(fitness)}")
     plt.show()
+
+    show_solution(solver, sol)
     
