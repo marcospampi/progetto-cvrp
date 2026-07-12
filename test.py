@@ -4,7 +4,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-from src.aco2 import ACOSolver
+from src.aco import ACOSolver
 from src.instance import Instance
 from src.base_solver import BaseSolver
 from src.solution import Solution

@@ -4,7 +4,8 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-from src.aco import ACOSolver, PlacementStrategy
+from src.aco import ACOSolver, PlacementStrategy, TrailContribuionStrategy
+from src.aco_mp import ACO_MPSolver
 from src.instance import Instance
 from src.base_solver import BaseSolver
 from src.solution import Solution
@@ -27,27 +28,31 @@ if __name__ == "__main__":
         0xDEADBEEF,
         0xC00FFEEE
     ]
-    path = os.path.join('instances', "CMT1.vrp")
+    path = os.path.join('instances', "A-n45-k7.vrp")
 
     instance = Instance.load_vrp(path)
-    for seed in seeds:
+    np.random.seed(seeds[-1])
 
-        np.random.seed(seed)
+    best_sol = None
+    for seed in range(10):
+
 
     
-        solver = ACOSolver(
+        solver = ACO_MPSolver(
             instance,
             rho = .1,
-            sigma = instance.customers,
-            alpha = 0,
-            beta = 2.5,
-            lambda_=2.5,
-            gamma = 2.5,
+            sigma = instance.customers//2,
+            alpha  = 3,
+            beta   = 5,
+            gamma  = 3,
+            lambda_= 3,
             two_opt = True,
-            placement_strategy = PlacementStrategy.CUSTOMER
+            wind=True,
+            placement_strategy = PlacementStrategy.CUSTOMER,
+            trail_contribution_strategy = TrailContribuionStrategy.SUM
             )
 
-        epochs = 200 # int(3.5e5/instance.customers)
+        epochs = 1000 # int(3.5e5/instance.customers)
         print(f"Running for {epochs} epochs")
         y = np.zeros(epochs)
         for i, sol in tqdm(enumerate(solver.run(epochs))):
@@ -58,16 +63,18 @@ if __name__ == "__main__":
                     tqdm.write("Trovata soluzione non valida :C")
                 else:
                     tqdm.write(f"Epoch {i} trovata soluzione: {y[i]:.3f}")
+                if best_sol is None or y[i] < best_sol.value:
+                    best_sol = sol
 
-        print(f"Ottimo trovato: {sol.value}")
+        #print(f"Ottimo trovato: {sol.value}")
+        #
+        #plt.title("Cost plot")
+        #plt.plot(y)
+        #plt.xlabel("Generations")
+        #plt.ylabel("Solution cost")
         
-        plt.title("Cost plot")
-        plt.plot(y)
-        plt.xlabel("Generations")
-        plt.ylabel("Solution cost")
-        
-        plt.show()
-        show_solution(instance, sol)
+        #plt.show()
+    show_solution(instance, best_sol)
         
 
     #solver = ACO(instance, ants=50, alpha = 10, beta = 10, rho=.1)
