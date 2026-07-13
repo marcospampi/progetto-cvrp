@@ -19,7 +19,7 @@ def main():
 if __name__ == "__main__":
     main()
     instance = Instance.load_vrp('instances/CMT1.vrp')
-    sol = Solution.from_solution('/home/marco/Scaricati/CMT1.sol', instance.distances)
+    sol = Solution.load_sol('/home/marco/Scaricati/CMT1.sol', instance.distances)
     print(sol.validate(instance))
     show_solution(instance,sol)
     

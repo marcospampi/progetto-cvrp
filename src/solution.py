@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 from src.instance import Instance
@@ -7,8 +9,7 @@ class Solution:
 
 	def __init__(self, 
 							routes: list[list[int]], 
-							value: float,
-							epoch: int = -1):
+							value: float):
 		self.routes_wno_depot = routes
 		self.value = value
 		
@@ -24,10 +25,6 @@ class Solution:
 		for tour in self.routes:
 			cost += sum( d[i,j] for i,j in zip(tour[:-1], tour[1:]) )
 		return cost
-
-	def set_epoch(self, epoch: int): 
-		self.epoch = epoch
-
 	def validate(self, instance: Instance):
 		cost_cond = abs(self.recompute(instance.distances) - self.value) <= 1e3
 		
@@ -49,14 +46,14 @@ class Solution:
 
 	
 	@staticmethod
-	def from_solution(path: str, distances: np.ndarray):
+	def load_sol(path: str, instance: Instance, lenient = False):
 		routes = []
 		cost = 0
 		with open(path) as file:
 			for line in file:
 				match line[:5]:
 					case 'Route':
-						line = line.split(': ')[1]
+						line = line.split(': ')[1].strip()
 						tour = [
 							int(idx) for idx in line.split(' ')
 						]
@@ -65,12 +62,30 @@ class Solution:
 						cost = float(line[5:])
 
 		sol = Solution(routes, cost)
-		computed = sol.recompute(distances)
+		computed = sol.recompute(instance.distances)
 		error = np.abs(np.round(computed, 3) - cost)
-		if error > 0:
+		if not lenient and error > 0:
+			
 			print(routes)
 			print(sol.routes_wno_depot)
 			print(sol.routes)
 			raise Exception("Invalid compute, cost claimed to be {:.3f}, computed {:.3f}".format(cost, computed))
 		
 		return sol
+	def to_json(self):
+		return json.dumps({
+			'value': self.value,
+			'routes': self.routes_wno_depot
+		})
+	@staticmethod
+	def load_json(path: str):
+		with open(path, 'r') as file:
+			data = json.load(file)
+			return Solution(data['routes'], data['value'])
+	def store_json(self, path: str):
+		with open(path, 'w') as out:
+			
+			json.dump({
+				'value': self.value,
+				'routes': self.routes_wno_depot
+			}, out)

@@ -28,31 +28,35 @@ if __name__ == "__main__":
         0xDEADBEEF,
         0xC00FFEEE
     ]
-    path = os.path.join('instances', "A-n45-k7.vrp")
+#    path = os.path.join('instances', "A-n45-k7.vrp")
+    path = os.path.join('instances', "CMT1.vrp")
+    #path = os.path.join('instances', "B-n56-k7.vrp")
 
     instance = Instance.load_vrp(path)
     np.random.seed(seeds[-1])
 
     best_sol = None
-    for seed in range(10):
+    for seed in range(1):
 
 
     
         solver = ACO_MPSolver(
             instance,
-            rho = .1,
-            sigma = instance.customers//2,
-            alpha  = 3,
-            beta   = 5,
-            gamma  = 3,
-            lambda_= 3,
+            num_of_cores = 12,
+            rho = .2,
+            sigma = instance.customers,
+            alpha  = 1, #pheromone
+            beta   = 5, #visibility
+            gamma  = 3, #savings
+            lambda_= 1, #capacity
             two_opt = True,
-            wind=True,
             placement_strategy = PlacementStrategy.CUSTOMER,
-            trail_contribution_strategy = TrailContribuionStrategy.SUM
+            trail_contribution_strategy = TrailContribuionStrategy.SUM,
+            mmas = True,
+            mmas_smoothing = 1e-5
             )
 
-        epochs = 1000 # int(3.5e5/instance.customers)
+        epochs = 2000 # int(3.5e5/instance.customers)
         print(f"Running for {epochs} epochs")
         y = np.zeros(epochs)
         for i, sol in tqdm(enumerate(solver.run(epochs))):

@@ -66,7 +66,6 @@ class Instance:
 						comment = value
 						try:
 							value = value[1:-1] # removes parenthesis
-							print(value)
 							value = tuple(map(str.strip,value.split(','))) # splits the comment
 
 							author, optimal_trucks, optimal_value = value

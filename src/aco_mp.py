@@ -1,6 +1,7 @@
 from functools import partial
 from itertools import batched
 from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 import os
 from copy import copy
 import numpy as np
@@ -9,24 +10,44 @@ from src.aco import ACOSolver
 
 
 class ACO_MPSolver(ACOSolver):
-	def __init__(self, instance, num_of_cores: int = None , **params):
+	"""
+	  Multiprocessing ACO Solver for parallel computing of the Ant System algorithm.
+	"""
+	def __init__(self, instance, **params):
 		
 		super().__init__(instance, **params)
 
-		self.num_of_cores = num_of_cores or os.cpu_count()  or 2
+		self.num_of_cores = params.get('num_of_cores',os.cpu_count())
 		self.dummy = copy(self)
+
+	def __enter__(self):
 		self.pool = Pool(self.num_of_cores)
+		return self
+		
+	def _run_ants_parallel(self, tau: np.ndarray, args: tuple[list, int]):
+			ants, seed = args
+			np.random.seed(seed)
+			return ACOSolver._run_ants(self, tau, ants)
+
 
 	def _run_ants(self, tau, ants):
 
-		fn = partial(ACOSolver._run_ants, self.dummy, tau)
-		batches = batched(ants, int(self.num_of_cores))
+		# work around to have deterministic runs
+		batches = list(batched(ants, int(self.num_of_cores)))
+		seeds = np.random.uniform(0, 2**32 - 1, size= len(batches)).astype(int)
+		bounded = partial(ACO_MPSolver._run_ants_parallel, self.dummy, tau)
 		
-		#results = [fn(batch) for batch in batches]
-		results = self.pool.map(fn, batches)
-		# combine results
+
+		results = self.pool.map(bounded, list(zip(batches, seeds)))
+
 		costs = np.concat([ cost for (cost,_,_) in results ])
 		trails = np.concat([ trail for (_,trail,_) in results ])
 		routes = [ tours for (_,_,routes) in results for tours in routes ]
 
 		return costs, trails, routes
+	
+	def __exit__(self, exc_type, exc, tb):
+		if self.pool is not None:
+			self.pool.terminate()
+		return False
+			

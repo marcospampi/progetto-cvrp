@@ -3,8 +3,17 @@ import matplotlib.pyplot as plt
 from .solution import Solution
 from .instance import Instance
 
-def show_solution(instance: Instance, solution: Solution):
-	plt.title("Solution")
+def show_solution(instance: Instance, solution: Solution,**kparams):
+	"""
+		Plots a solution
+		Args:
+			instance (Instance): instance of a CVRP rproblem
+			solution (Solution): solution of a CVRP problem
+			title (str): A title for the plot. `Solution` is default.
+			figsize ((int,int)): A size for the plot. `(8,6)` is default.
+	"""
+	plt.figure(figsize=kparams.get('figsize', (8,6)))
+	plt.title(kparams.get('title', 'Solution'))
 	
 	x_coords, y_coords = np.unstack(instance.node_coords, axis=1)
 

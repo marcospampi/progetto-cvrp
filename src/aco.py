@@ -23,6 +23,9 @@ class TrailContribuionStrategy(Enum):
 #  CUSTOMER = 1
 #  RANDOM = 2
 class ACOSolver(BaseSolver):
+  """
+    ACO solver for CVRP problem
+  """
   def __init__(self, instance: Instance, **params):
     """Inizializza i parametri dell'algoritmo Ant Colony Optimization (ACO).
 
@@ -54,9 +57,10 @@ class ACOSolver(BaseSolver):
                 sui nodi del grafo all'inizio di ogni iterazione. Default: `PlacementStrategy.CUSTOMER`.
             two_opt (bool): Usa two-opt sulla soluzione di ogni formica.
             initial_tau (float): Valore iniziale di feromone. Default: `.5`
-            wind (bool): Aggiunge stocasticamente un rumore normale, con deviazione pari al reciproco della soluzione migliore.
             trail_contribution_strategy (TrailContribuionStrategy): 
               strategia di contributo del feromone, per ogni generazione, di default `BEST_IN_EPOCH`
+            mmas (bool): applica la limitazione dei livelli di feromone come descritto dall'algoritmo Max-Min Ant System. Default `false`
+            mmas_smoothing (float): applica lo smussamento dei livelli di feromone come descritto dall'algoritmo Max-Min ant system. Default `0.0`
         """
     super().__init__(instance)
 
@@ -83,7 +87,8 @@ class ACOSolver(BaseSolver):
 
     self.initial_capacity = instance.capacity
     self.trail_contribution_strategy = params.get('trail_contribution_strategy', TrailContribuionStrategy.BEST_IN_EPOCH)
-  
+    self.mmas = params.get('mmas', False)
+    self.mmas_smoothing = params.get('mmas_smoothing', 0.0)
 
   def _run_single_ant(self, tau: np.ndarray, initial_position: int):
     # inizializzo lo stato iniziale della singola formica
@@ -105,7 +110,7 @@ class ACOSolver(BaseSolver):
       inoltre aggiorniamo il costo e il deposito di feromone.
     """
     if i > 0: 
-      tours[-1].append(i)
+      tours[-1].append(int(i))
       cost += self.distances[0,i]
       capacity -= self.demands[i]
       trail[0,i]+=1
@@ -121,18 +126,25 @@ class ACOSolver(BaseSolver):
         Invece di calcolare direttamente la classica matrice Pij in letteratura, la quale è prona a instabilità numerica,
         calcoliamo, per componente, il logaritmo di Pij, cui successivamente normaliziamo.
       """
-      log_tau, log_eta, log_kappa, log_mu = (
-        np.log(tau[i] + epsilon),
-        np.log(eta[i] + epsilon),
-        np.log(kappa  + epsilon),
-        np.log(self.mu[i]  + epsilon)
-      )
+      #log_tau, log_eta, log_kappa, log_mu = (
+      #  np.log(tau[i] + epsilon),
+      #  np.log(eta[i] + epsilon),
+      #  np.log(kappa  + epsilon),
+      #  np.log(self.mu[i]  + epsilon)
+      #)
+#
+      #log_pij = (
+      #  self.alpha * log_tau +
+      #  self.beta *  log_eta +
+      #  self.gamma * log_kappa +
+      #  self.lambda_ * log_mu
+      #)
 
       log_pij = (
-        self.alpha * log_tau +
-        self.beta *  log_eta +
-        self.gamma * log_kappa +
-        self.lambda_ * log_mu
+        self.alpha * np.log(epsilon + tau[i])
+        + self.beta *  np.log(epsilon + eta[i])
+        + self.gamma * np.log(epsilon + self.mu[i])
+        + self.lambda_ * np.log(epsilon + kappa)  
       )
 
       Pij = np.exp(log_pij) * unvisited_nodes
@@ -158,7 +170,7 @@ class ACOSolver(BaseSolver):
 
 
       # aggiorniamo  feromone e costo con il percorso eseguito
-      trail[i,j]=1
+      trail[i,j] = trail[j,i] = 1
       cost += self.distances[i,j]
       
       # spostiamo la formica al nodo j
@@ -232,14 +244,14 @@ class ACOSolver(BaseSolver):
 
     pass
 
-  def _run_epoch(self, tau: np.ndarray, elitist_trail: np.ndarray):
+  def _run_epoch(self, tau: np.ndarray, sb_trail: np.ndarray, sb_best: float = None):
     """
       Esegue una epoca dell'algoritmo
       Args:
         tau (np.ndarray): 
           La matrice dei feromoni.
-        elitist_trail (np.ndarray): 
-          La matrice dei depositi delle formiche elitarie
+        sb_trail (np.ndarray): 
+          La matrice dei depositi della solutione migliore
       Returns:
         (tau, solution, best_trail) (np.ndarray, Solution, best_trail): 
           - `tau` Matrice dei feromoni aggiornata.
@@ -263,16 +275,25 @@ class ACOSolver(BaseSolver):
 
     # aggiorna tau ( feromoni )
     epoch_trail_contribution = trails[best_in_epoch]# np.sum(trails, axis = 0)
-    elitist_trail_contribution = self.sigma * elitist_trail
-    wind_contribution = (
-      np.abs(np.random.normal(0, scale = 1.0/(best_cost), size = self.zero.shape))
-      if self.wind else self.zero
-    )
+    elitist_trail_contribution = self.sigma * sb_trail
+
     evaporation = (1-self.rho) * tau
-    tau = evaporation + epoch_trail_contribution + elitist_trail_contribution + wind_contribution
-    tau = np.clip(tau, 1e-9, 1)
+    tau = evaporation + epoch_trail_contribution + elitist_trail_contribution 
 
+    # applica operatori MMAS
+    if sb_best is not None and ( self.mmas or self.mmas_smoothing):
+      tau_max = 1 / ( self.rho * sb_best )
+      # applica Max-Min clip
+      if self.mmas and sb_best is not None:
+        
+        tau_min = tau_max / (2 * self.customers) 
+        tau_min = np.min([tau_min, tau_max])
 
+        tau = np.clip(tau, tau_min, tau_max)
+      # applica smoothing
+      if self.mmas_smoothing > 0.0:
+        delta = self.mmas_smoothing
+        tau = tau + delta * ( tau_max - tau)
     return tau, Solution(best_routes, best_cost), best_trail
     
 
@@ -288,20 +309,20 @@ class ACOSolver(BaseSolver):
     # Inizializiamo a None la soluzione migliore ( non settata quindi )
     best_solution = None
     # Inizializiamo a zero il deposito di feromone delle formiche elitarie 
-    elitist_trail = self.zero
+    sb_trails = self.zero
     # Copiamo tau 
     tau = self.initial_tau.copy()
 
     # per ogni epoca
     for epoch in range(epochs):
       # eseguiamo la subroutine che esegue l'epoca
-      tau, sol, trail = self._run_epoch(tau, elitist_trail)
+      sb_value = best_solution.value if best_solution is not None else None
+      tau, sol, trails = self._run_epoch(tau, sb_trails, sb_value)
 
       # se è la prima soluzione, oppure abbiamo una nuova soluzione migliore, la salviamo
       if best_solution is None or best_solution.value > sol.value:
-        sol.set_epoch(epoch)
         best_solution = sol
-        elitist_trail = trail
+        sb_trails = trails
       
       # emette la migliore soluzione fino a questa epoca
       yield best_solution
@@ -309,122 +330,7 @@ class ACOSolver(BaseSolver):
     # restituisce la miglioe soluzione fino a questa epoca 
     return best_solution
 
-  def __run_naive__(self, evaluations):
-    """
-      Algoritmo iniziale, successivamente ripulito e riorganizzato
-    """
-    self.best_solution = None
-    self.best_solution_value = None
-    self.best_solution_trail = self.zero
-    dimension = self.dimension
-    rho = self.rho
-    sigma = self.sigma
-    tau = self.initial_tau.copy()
-    eta = self.eta
-    mu = self.mu
-    demands = self.demands
-    d = self.distances
-    initial_capacity = self.capacity
-
-    alpha, beta, gamma, lambda_ = self.alpha, self.beta, self.gamma, self.lambda_
-
-    for epoch in range(evaluations):
-      ants = self._get_ants_initial_position()
-      number_of_ants = len(ants)
-
-      costs = np.zeros(number_of_ants)
-      trails = np.zeros((number_of_ants,*self.zero.shape))
-      tours = []
-
-      for idx, initial_position in enumerate(ants):
-        capacity = initial_capacity
-        unvisited_nodes = np.ones(dimension, dtype=bool)
-        unvisited_nodes[0] = unvisited_nodes[initial_position] = False
-        unvisited_count = np.sum(unvisited_nodes)
-        trail = self.zero.copy()
-        cost = 0
-        routes = [[]]
-        i = int(initial_position)
-        
-        if i > 0: 
-          routes[-1].append(i)
-          cost += d[0,i]
-          trail[0,i]+=1
-
-        while unvisited_count > 0:
-          kappa = 1 - (capacity - demands) / initial_capacity
-          
-          #Pij = tau_eta[i] * (kappa ** lambda_) * (mu_ ** sigma) * unvisited_nodes
-          #Pij_d = np.sum(Pij)
-          #Pij = Pij / Pij_d if Pij_d > 0 else Pij
-          epsilon = 1e-9
-          # modifiche per stabilità numerica!!!
-          tau_log, eta_log, kappa_log, mu_log = (
-            np.log(tau[i] + epsilon),
-            np.log(eta[i] + epsilon),
-            np.log(kappa  + epsilon),
-            np.log(mu[i]  + epsilon)
-          )
-
-          log_pij = (
-            alpha * tau_log +
-            beta *  eta_log +
-            gamma * kappa_log +
-            lambda_ * mu_log
-          )
-
-          Pij = np.exp(log_pij) * unvisited_nodes
-
-          Pij = Pij / np.sum(Pij)
-
-          j = np.random.choice(dimension, p=Pij)
-
-          demand_j = demands[j]
-          if demand_j > capacity:
-            routes.append([])
-            j, capacity = 0, initial_capacity
-          else:
-            routes[-1].append(j)
-            capacity-=demand_j
-            unvisited_nodes[j] = False
-            unvisited_count-=1
-
-          trail[i,j]+=1
-          cost += d[i,j]
-          i = j
-        
-        if i > 0:
-          cost += d[i,0]
-
-        if self.two_opt:
-          for i, route in enumerate(routes):
-            route, savings = two_opt(route, d)
-            if savings >  0:
-              routes[i] = route
-              cost -= savings
-        
-        trail = trail * cost
-        trail[trail > 0] = 1.0 / (trail[trail > 0] * cost) 
-        
-
-        trails[idx] = trail
-        costs[idx] = cost
-        tours.append(routes)
-      
-      best_idx = np.argmin(costs)
-
-      epoch_trail_contribution = np.sum(trails, axis = 0)
-      best_solution_contribution = sigma * best_solution_trail
-      tau = (1-rho) * tau + epoch_trail_contribution + best_solution_contribution
-
-      tau = np.clip(tau, 1e-6,np.inf)
-      
-      if best_solution_value is None or costs[best_idx] < best_solution_value:
-        best_solution_value = costs[best_idx]
-        best_solution_trail = trails[best_idx]
-        best_solution = Solution(tours[best_idx], best_solution_value)
-      yield best_solution
-
+ 
 
   def _get_ants_initial_position(self):
     """
