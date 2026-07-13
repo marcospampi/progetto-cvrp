@@ -1,6 +1,6 @@
 import os
 from argparse import ArgumentParser
-from src.hardwork import hardwork
+from src.grinder import grinder
 from src.aco import TrailContribuionStrategy, PlacementStrategy
 profiles = {
     'NN': {
@@ -29,32 +29,32 @@ profiles = {
         'mmas': False,
         'mmas_smoothing': 0,
     },
-    # 'ACO-A2B5+2opt': {
-    #     'rho': .2,
-    #     'sigma': 0,
-    #     'alpha': 1,
-    #     'beta': 5,
-    #     'gamma': 0,
-    #     'lambda_': 0,
-    #     'two_opt': True,
-    #     'placement_strategy': PlacementStrategy.CUSTOMER,
-    #     'trail_contribution_strategy': TrailContribuionStrategy.SUM,
-    #     'mmas': False,
-    #     'mmas_smoothing': 0,
-    # },
-    # 'ACO-A2B5G3L1+2opt': {
-    #     'rho': .2,
-    #     'sigma': 0,
-    #     'alpha': 1,
-    #     'beta': 5,
-    #     'gamma': 3,
-    #     'lambda_': 1,
-    #     'two_opt': True,
-    #     'placement_strategy': PlacementStrategy.CUSTOMER,
-    #     'trail_contribution_strategy': TrailContribuionStrategy.SUM,
-    #     'mmas': False,
-    #     'mmas_smoothing': 0,
-    # },
+    'ACO-A2B5+2opt': {
+        'rho': .2,
+        'sigma': 0,
+        'alpha': 1,
+        'beta': 5,
+        'gamma': 0,
+        'lambda_': 0,
+        'two_opt': True,
+        'placement_strategy': PlacementStrategy.CUSTOMER,
+        'trail_contribution_strategy': TrailContribuionStrategy.SUM,
+        'mmas': False,
+        'mmas_smoothing': 0,
+    },
+    'ACO-A2B5G3L1+2opt': {
+        'rho': .2,
+        'sigma': 0,
+        'alpha': 1,
+        'beta': 5,
+        'gamma': 3,
+        'lambda_': 1,
+        'two_opt': True,
+        'placement_strategy': PlacementStrategy.CUSTOMER,
+        'trail_contribution_strategy': TrailContribuionStrategy.SUM,
+        'mmas': False,
+        'mmas_smoothing': 0,
+    },
     'ACO-A1B5G3L1+2opt+MMAS+EA': {
         'rho': .2,
         'sigma': 30,
@@ -96,7 +96,7 @@ def main():
     #output_path = '/tmp/results' # os.path.join(cwd, 'results', 'results.csv')
 
     args = argparser.parse_args()
-    hardwork(
+    grinder(
         fe = args.fe,
         seed = args.seed,
         runs = args.runs,

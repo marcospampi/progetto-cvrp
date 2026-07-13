@@ -12,6 +12,7 @@ class Solution:
 							value: float):
 		self.routes_wno_depot = routes
 		self.value = value
+		self.trucks = len(routes)
 		
 		self.routes = [
 			[0,*route,0] for route in routes
