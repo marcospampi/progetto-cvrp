@@ -28,47 +28,44 @@ if __name__ == "__main__":
         0xDEADBEEF,
         0xC00FFEEE
     ]
-#    path = os.path.join('instances', "A-n45-k7.vrp")
-    path = os.path.join('instances', "CMT1.vrp")
+    #path = os.path.join('instances', "A-n45-k7.vrp")
+    path = os.path.join('instances', "CMT1.vrp.ignore")
     #path = os.path.join('instances', "B-n56-k7.vrp")
 
     instance = Instance.load_vrp(path)
-    np.random.seed(seeds[-1])
+    np.random.seed(0xcafebabe)
 
     best_sol = None
     for seed in range(1):
-
-
-    
-        solver = ACO_MPSolver(
+        with ACO_MPSolver(
             instance,
-            num_of_cores = 12,
-            rho = .2,
+            num_of_cores = 6,
+            rho = .25,
             sigma = instance.customers,
-            alpha  = 1, #pheromone
+            alpha  = 2, #pheromone
             beta   = 5, #visibility
-            gamma  = 3, #savings
-            lambda_= 1, #capacity
+            gamma  = 0, #savings
+            lambda_= 0, #capacity
             two_opt = True,
             placement_strategy = PlacementStrategy.CUSTOMER,
             trail_contribution_strategy = TrailContribuionStrategy.SUM,
             mmas = True,
-            mmas_smoothing = 1e-5
-            )
+            mmas_smoothing = 0
+            ) as solver:
 
-        epochs = 2000 # int(3.5e5/instance.customers)
-        print(f"Running for {epochs} epochs")
-        y = np.zeros(epochs)
-        for i, sol in tqdm(enumerate(solver.run(epochs))):
-            y[i] = sol.value
-            
-            if i > 0 and y[i] < y[i-1]:
-                if not sol.validate(instance):
-                    tqdm.write("Trovata soluzione non valida :C")
-                else:
-                    tqdm.write(f"Epoch {i} trovata soluzione: {y[i]:.3f}")
-                if best_sol is None or y[i] < best_sol.value:
-                    best_sol = sol
+            epochs = int(3.5e5/instance.customers)
+            print(f"Running for {epochs} epochs")
+            y = np.zeros(epochs)
+            for i, sol in tqdm(enumerate(solver.run(epochs))):
+                y[i] = sol.value
+
+                if i > 0 and y[i] < y[i-1]:
+                    if not sol.validate(instance):
+                        tqdm.write("Trovata soluzione non valida :C")
+                    else:
+                        tqdm.write(f"Epoch {i} trovata soluzione: {y[i]:.3f} [BKS: {instance.optimal_value}]")
+                    if best_sol is None or y[i] < best_sol.value:
+                        best_sol = sol
 
         #print(f"Ottimo trovato: {sol.value}")
         #

@@ -9,13 +9,13 @@ from tqdm import tqdm
 from src.aco_mp import ACO_MPSolver
 from src.instance import Instance
 
-def grinder(fe: int, seed: int, runs: int,  instances_path: str, profiles: dict, output_path: str):
+def grinder(fe: int, seed: int, runs: int,  instances_path: str, profiles: dict, output_file: str):
 	instances = [
 		Instance.load_vrp(os.path.join(instances_path, file)) 
 		for file in os.listdir(instances_path)
 			if re.search(r'\.vrp$', file)
 	]
-	output_file = os.path.join(output_path, 'runs.csv')
+	output_file = os.path.join(output_file)
 	def runner():
 		for instance in instances:
 			tqdm.write(f"Current instance: {instance.name}")

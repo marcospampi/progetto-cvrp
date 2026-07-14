@@ -4,90 +4,104 @@ from src.grinder import grinder
 from src.aco import TrailContribuionStrategy, PlacementStrategy
 profiles = {
     'NN': {
-        'rho': 1,
-        'sigma': 0,
+        'rho': 0,
         'alpha': 0,
         'beta': 1,
         'gamma': 0,
         'lambda_': 0,
+        'sigma': 0,
         'two_opt': False,
         'placement_strategy': PlacementStrategy.CUSTOMER,
         'trail_contribution_strategy': TrailContribuionStrategy.SUM,
         'mmas': False,
         'mmas_smoothing': 0,
     },
-    'ACO-A2B5': {
-        'rho': .2,
-        'sigma': 0,
+    'AS': {
+        'rho': .25,
         'alpha': 1,
         'beta': 5,
         'gamma': 0,
         'lambda_': 0,
+        'sigma': 'auto',
         'two_opt': False,
         'placement_strategy': PlacementStrategy.CUSTOMER,
         'trail_contribution_strategy': TrailContribuionStrategy.SUM,
-        'mmas': False,
+        'mmas': True,
         'mmas_smoothing': 0,
     },
-    'ACO-A2B5+2opt': {
-        'rho': .2,
-        'sigma': 0,
+    'HAS': {
+        'rho': .25,
         'alpha': 1,
         'beta': 5,
         'gamma': 0,
         'lambda_': 0,
+        'sigma': 'auto',
         'two_opt': True,
         'placement_strategy': PlacementStrategy.CUSTOMER,
         'trail_contribution_strategy': TrailContribuionStrategy.SUM,
-        'mmas': False,
+        'mmas': True,
         'mmas_smoothing': 0,
     },
-    'ACO-A2B5G3L1+2opt': {
-        'rho': .2,
-        'sigma': 0,
+    'HAS-SAV': {
+        'rho': .25,
         'alpha': 1,
         'beta': 5,
-        'gamma': 3,
-        'lambda_': 1,
+        'gamma': 5,
+        'lambda_': 0,
+        'sigma': 'auto',
         'two_opt': True,
         'placement_strategy': PlacementStrategy.CUSTOMER,
         'trail_contribution_strategy': TrailContribuionStrategy.SUM,
-        'mmas': False,
-        'mmas_smoothing': 0,
-    },
-    'ACO-A1B5G3L1+2opt+MMAS+EA': {
-        'rho': .2,
-        'sigma': 30,
-        'alpha': 1,
-        'beta': 5,
-        'gamma': 3,
-        'lambda_': 1,
-        'two_opt': True,
-        'placement_strategy': PlacementStrategy.CUSTOMER,
-        'trail_contribution_strategy': TrailContribuionStrategy.BEST_IN_EPOCH,
         'mmas': True,
         'mmas_smoothing': 0,
     },
-    'ACO-A1B5G2L3+2opt+MMAS+EA': {
-        'rho': .2,
-        'sigma': 30,
+    'HAS-CAP': {
+        'rho': .25,
         'alpha': 1,
         'beta': 5,
-        'gamma': 2,
-        'lambda_': 3,
+        'gamma': 0,
+        'lambda_': 5,
+        'sigma': 'auto',
         'two_opt': True,
         'placement_strategy': PlacementStrategy.CUSTOMER,
-        'trail_contribution_strategy': TrailContribuionStrategy.BEST_IN_EPOCH,
+        'trail_contribution_strategy': TrailContribuionStrategy.SUM,
         'mmas': True,
         'mmas_smoothing': 0,
     },
+    'HAS-1': {
+        'rho': .25,
+        'alpha': 1,
+        'beta': 5,
+        'gamma': 5,
+        'lambda_': 5,
+        'sigma': 'auto',
+        'two_opt': True,
+        'placement_strategy': PlacementStrategy.CUSTOMER,
+        'trail_contribution_strategy': TrailContribuionStrategy.SUM,
+        'mmas': True,
+        'mmas_smoothing': 0,
+    },
+    'HAS-5': {
+        'rho': .25,
+        'alpha': 5,
+        'beta': 5,
+        'gamma': 5,
+        'lambda_': 5,
+        'sigma': 'auto',
+        'two_opt': True,
+        'placement_strategy': PlacementStrategy.CUSTOMER,
+        'trail_contribution_strategy': TrailContribuionStrategy.SUM,
+        'mmas': True,
+        'mmas_smoothing': 0,
+    },
+    
 
 }
 
 def main():
     cwd = os.path.abspath(os.getcwd())
     argparser = ArgumentParser()
-    argparser.add_argument("output_path", help="Cartella di output")
+    argparser.add_argument("output", help="File di output (.csv)")
     argparser.add_argument("--instances", help="Percorso delle istanze .vrp", default=os.path.join(cwd, 'instances'))
     argparser.add_argument("--fe", help="Numero di fitness evaluation", default=int(3.5e5), type=int)
     argparser.add_argument("--runs", help="Esecuzioni per istanza", default=5, type=int)
@@ -102,7 +116,7 @@ def main():
         runs = args.runs,
         instances_path=args.instances,
         profiles=profiles,
-        output_path=args.output_path
+        output_file=args.output
     )
 
 

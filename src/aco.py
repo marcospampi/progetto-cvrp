@@ -44,15 +44,16 @@ class ACOSolver(BaseSolver):
             rho (float): Tasso di evaporazione del feromone (0 < rho < 1). Controlla la velocità 
                 con cui la traccia di feromone decade a ogni iterazione. Supporta anche l'alias `'evaporation'`.
                 Default: `0.1`.
-            sigma (float): Numero di formiche elitarie (*elitist ants*). Determina quante formiche associate 
-                alla soluzione *best-so-far* rilasciano un surplus di feromone per intensificare la ricerca. 
-                Supporta anche l'alias `'elitist_ants'`. Default: `0`.
             alpha (float): Esponente alpha per la traccia di feromone. Regola l'importanza della memoria 
                 storica collettiva nella scelta del prossimo nodo. Default: `0`.
             beta (float): Esponente beta per l'informazione euristica (visibilità). Regola l'importanza della 
                 componente greedy (es. vicinanza geometrica) nella scelta del prossimo nodo. Default: `1`.
             gamma (float): Esponente gamma per la componente euristica legata alla misura di savings. Default: `0`.
             lambda_ (float): Esponente lambda per la componente euristica legata alla misura della capacità residua. Default: `0`.
+            sigma (float|'auto'): Numero di formiche elitarie (*elitist ants*). Determina quante formiche associate 
+                alla soluzione *best-so-far* rilasciano un surplus di feromone per intensificare la ricerca.
+                Se viene passata l'opzione 'auto', verrà associato un numero di formiche elitarie pari al numero di formiche della colonia.
+                Supporta anche l'alias `'elitist_ants'`. Default: `0`.
             placement_strategy (PlacementStrategy): Strategia di posizionamento iniziale delle formiche 
                 sui nodi del grafo all'inizio di ogni iterazione. Default: `PlacementStrategy.CUSTOMER`.
             two_opt (bool): Usa two-opt sulla soluzione di ogni formica.
@@ -66,7 +67,8 @@ class ACOSolver(BaseSolver):
 
     self.number_of_ants: int = params.get('number_of_ants', instance.customers)
     self.rho: float = dict_coalesce(params, ['rho','evaporation'], .1)
-    self.sigma: float = dict_coalesce(params, ['sigma','elitist_ants'], 0)
+    sigma = dict_coalesce(params, ['sigma','elitist_ants'], 0)
+    self.sigma: float = sigma if sigma != 'auto' else instance.customers
     self.alpha : float = params.get('alpha', 0)
     self.beta : float = params.get('beta', 1)
     self.gamma : float = params.get('gamma', 0)
@@ -294,6 +296,7 @@ class ACOSolver(BaseSolver):
       if self.mmas_smoothing > 0.0:
         delta = self.mmas_smoothing
         tau = tau + delta * ( tau_max - tau)
+    
     return tau, Solution(best_routes, best_cost), best_trail
     
 
