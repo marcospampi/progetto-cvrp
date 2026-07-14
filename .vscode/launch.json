@@ -5,6 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 
+
 		{
 			"name": "Python Debugger: main.py",
 			"type": "debugpy",
@@ -18,6 +19,12 @@
 			"request": "launch",
 			"program": "main_mp.py",
 			"console": "integratedTerminal"
-		}
-	]
+		},
+			{
+			"name": "Python Debugger: test.py",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "test.py",
+			"console": "integratedTerminal"
+		}	]
 }

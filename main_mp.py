@@ -39,13 +39,13 @@ if __name__ == "__main__":
     for seed in range(1):
         with ACO_MPSolver(
             instance,
-            num_of_cores = 6,
+            num_of_cores = 12,
             rho = .25,
-            sigma = instance.customers,
-            alpha  = 2, #pheromone
+            sigma = 'auto',
+            alpha  = 5, #pheromone
             beta   = 5, #visibility
-            gamma  = 0, #savings
-            lambda_= 0, #capacity
+            gamma  = 5, #savings
+            lambda_= 5, #capacity
             two_opt = True,
             placement_strategy = PlacementStrategy.CUSTOMER,
             trail_contribution_strategy = TrailContribuionStrategy.SUM,

@@ -97,6 +97,7 @@ class ACOSolver(BaseSolver):
 
     i = initial_position
     eta = self.eta
+    mu = self.mu
     capacity = self.initial_capacity
     unvisited_nodes = np.ones(self.dimension, dtype=bool)
     unvisited_nodes[0] = unvisited_nodes[i] = False
@@ -142,19 +143,34 @@ class ACOSolver(BaseSolver):
       #  self.lambda_ * log_mu
       #)
 
-      log_pij = (
+      #log_pij = (
+      #  self.alpha * np.log(epsilon + tau[i])
+      #  + self.beta *  np.log(epsilon + eta[i])
+      #  + self.gamma * np.log(epsilon + self.mu[i])
+      #  + self.lambda_ * np.log(epsilon + kappa)  
+      #)
+#
+      #Pij = np.exp(log_pij) * unvisited_nodes
+#
+      ## normaliziamo Pij
+      #Pij = Pij / np.sum(Pij)
+      Xij  = (
         self.alpha * np.log(epsilon + tau[i])
         + self.beta *  np.log(epsilon + eta[i])
-        + self.gamma * np.log(epsilon + self.mu[i])
+        + self.gamma * np.log(epsilon + mu[i])
         + self.lambda_ * np.log(epsilon + kappa)  
       )
 
-      Pij = np.exp(log_pij) * unvisited_nodes
+      Xij[~unvisited_nodes] = -np.inf
 
-      # normaliziamo Pij
-      Pij = Pij / np.sum(Pij)
+      c = Xij.max()
+      lse = c + np.log(np.sum(np.exp(Xij - c)))
+      Pij = np.exp(
+        Xij - lse
+      )
 
-      # sceliamo il prossimo noto da visitare
+
+      # sceliamo il prossimo nodo da visitare
       j = np.random.choice(self.dimension, p=Pij)
       
       demand_j = self.demands[j]
