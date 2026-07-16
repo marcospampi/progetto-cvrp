@@ -1,4 +1,4 @@
-# Risoluzione del Capacitated Vehicle Routing Problem tramite algoritmo ACO
+# Applicazione di un algoritmo Ant Colony Optimization al problema del Capacitated Vehicle Routing Problem
 Questa repository contiene il codice e le istanze dei problemi relative al progetto di esame del corso 
 di Heuristics and Meta-Heuristics tenuto dal professore Mario Pavone dell'Università di Catania.
 

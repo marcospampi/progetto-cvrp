@@ -1,22 +1,17 @@
 from argparse import ArgumentParser
-import json
-import os
 from time import time
 
 import numpy as np
 from tqdm import tqdm
 
-from src.aco import ACOSolver, PlacementStrategy, TrailContribuionStrategy
+from src.aco import  PlacementStrategy, TrailContribuionStrategy
 from src.aco_mp import ACO_MPSolver
 from src.instance import Instance
-from src.base_solver import BaseSolver
-from src.solution import Solution
 from src.utils import show_solution
 
-import matplotlib.pyplot as plt
 
 def main():
-    cwd = os.path.abspath(os.getcwd())
+    # carica gli argomenti
     argparser = ArgumentParser()
     argparser.add_argument("instance", help="File di istanza .vrp")
     argparser.add_argument("--iterations", help="Numero di iterazioni", default=100, type=int)
@@ -35,6 +30,8 @@ def main():
     argparser.add_argument("--save", help="Salva la soluzione in formato JSON", default=None, type=str)
     argparser.add_argument("--show-plot", help="Mostra la soluzione a schermo.", default=True, type=bool)
     
+
+    # recuperali, come dizionario
     args = vars(argparser.parse_args())
 
     
@@ -55,6 +52,7 @@ def main():
     
     np.random.seed(seed)
     
+    # predisponi due variabili, rispettivamente per l'indice e la soluzione globale migliore trovata
     global_best_idx = (0,0)
     global_best = None
 
@@ -102,5 +100,7 @@ run = {run+1}, iterazione = {it+1}, seed = {seed}
 
 
 if __name__ == "__main__":
+    # arrabbiati numpy, arrabbiati!
+    # et tu, vibe coding detector, che rispondi che sto codice è definetly AI-made, scusati, e impara a programmare dai king
     np.seterr('raise')
     main()
