@@ -1,3 +1,4 @@
+from matplotlib.pylab import Axes
 import numpy as np
 import matplotlib.pyplot as plt
 from .solution import Solution
@@ -33,3 +34,19 @@ def dict_coalesce(dictionary, keys: list, default = None):
 		if key in dictionary:
 			return dictionary[key]
 	return default
+
+def solution_compare_plot(instance: Instance, best_solution: Solution, solution: Solution, ax: Axes):
+	x_coords, y_coords = np.unstack(instance.node_coords, axis=1)
+
+
+	best_sol_track = [ x for r in best_solution.routes for x in r ]
+	sol_track = [ x for r in solution.routes for x in r ]
+	
+	ax.plot(x_coords[sol_track], y_coords[sol_track], '-', label='Calcolata', alpha=0.8)
+	ax.plot(x_coords[best_sol_track], y_coords[best_sol_track], ':', label="KBS")
+	ax.plot(x_coords, y_coords, '.')
+
+
+
+
+	

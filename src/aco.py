@@ -98,7 +98,7 @@ class ACOSolver(BaseSolver):
     i = initial_position
     eta = self.eta
     mu = self.mu
-    capacity = self.initial_capacity
+    load = self.initial_capacity
     unvisited_nodes = np.ones(self.dimension, dtype=bool)
     unvisited_nodes[0] = unvisited_nodes[i] = False
     unvisited_count = np.sum(unvisited_nodes)
@@ -115,13 +115,13 @@ class ACOSolver(BaseSolver):
     if i > 0: 
       tours[-1].append(int(i))
       cost += self.distances[0,i]
-      capacity -= self.demands[i]
+      load -= self.demands[i]
       trail[0,i]+=1
     
     # eseguiamo la simulazione Ant System
     while unvisited_count > 0:
 
-      kappa = 1 - (capacity - self.demands) / self.initial_capacity
+      kappa = 1 - (load - self.demands) / self.initial_capacity
 
       epsilon = 1e-6
 
@@ -176,13 +176,13 @@ class ACOSolver(BaseSolver):
       demand_j = self.demands[j]
       
       # se la domanda è maggiore della capacità residua, torniamo al deposito e ricarichiamo la formica
-      if demand_j > capacity:
+      if demand_j > load:
         tours.append([])
-        j, capacity = 0, self.initial_capacity
+        j, load = 0, self.initial_capacity
       # altrimenti scarichiamo la capacità, aggiungiamo al tour il nodo e lo segniamo come visitato
       else:
         tours[-1].append(j)
-        capacity-=demand_j
+        load-=demand_j
         unvisited_nodes[j] = False
         unvisited_count-=1
 

@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import json
 import os
 
@@ -13,12 +14,8 @@ from src.utils import show_solution
 
 import matplotlib.pyplot as plt
 
-def main():
-    print("Hello from metaheuristics!")
-
 
 if __name__ == "__main__":
-    main()
     np.seterr('raise')
 
     seeds = [
@@ -28,29 +25,29 @@ if __name__ == "__main__":
         0xDEADBEEF,
         0xC00FFEEE
     ]
-    #path = os.path.join('instances', "A-n45-k7.vrp")
-    path = os.path.join('instances', "CMT1.vrp.ignore")
+    path = os.path.join('instances', "A-n45-k7.vrp")
+    #path = os.path.join('instances', "CMT1.vrp.ignore")
     #path = os.path.join('instances', "B-n56-k7.vrp")
 
     instance = Instance.load_vrp(path)
-    np.random.seed(0xcafebabe)
+    np.random.seed(0xdeadbeef)
 
     best_sol = None
     for seed in range(1):
         with ACO_MPSolver(
             instance,
             num_of_cores = 12,
-            rho = .25,
+            rho = .1,
             sigma = 'auto',
-            alpha  = 5, #pheromone
+            alpha  = 3, #pheromone
             beta   = 5, #visibility
-            gamma  = 5, #savings
-            lambda_= 5, #capacity
+            gamma  = 2, #savings
+            lambda_= 0.5, #capacity
             two_opt = True,
             placement_strategy = PlacementStrategy.CUSTOMER,
-            trail_contribution_strategy = TrailContribuionStrategy.SUM,
+            trail_contribution_strategy = TrailContribuionStrategy.BEST_IN_EPOCH,
             mmas = True,
-            mmas_smoothing = 0
+            mmas_smoothing = 1e-2
             ) as solver:
 
             epochs = int(3.5e5/instance.customers)
@@ -67,36 +64,4 @@ if __name__ == "__main__":
                     if best_sol is None or y[i] < best_sol.value:
                         best_sol = sol
 
-        #print(f"Ottimo trovato: {sol.value}")
-        #
-        #plt.title("Cost plot")
-        #plt.plot(y)
-        #plt.xlabel("Generations")
-        #plt.ylabel("Solution cost")
-        
-        #plt.show()
     show_solution(instance, best_sol)
-        
-
-    #solver = ACO(instance, ants=50, alpha = 10, beta = 10, rho=.1)
-    #evaluations = int(1e4)
-    #cost, fitness, trucks = [],[], []
-    #for i, sol in enumerate(solver.run(evaluations=evaluations)):
-    #    cost.append(sol.cost)
-    #    fitness.append(sol.fitness)
-    #    trucks.append(sol.number_of_trucks())
-    #
-    #fig, (ax1,ax2,ax3) = plt.subplots(1,3, figsize=(7*3,6))
-    #plt.title("Runs")
-    #
-    #ax1.set_title("Cost")
-    #ax1.plot(cost)
-    #ax2.set_title("Fitness")
-    #ax2.plot(fitness)
-    #ax3.set_title("Trucks")
-    #ax3.hist(trucks)
-    #print(f"Best cost {min(cost)}, best fitness {max(fitness)}")
-    #plt.show()
-#
-    #show_solution(solver, sol)
-    

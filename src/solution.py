@@ -9,14 +9,22 @@ class Solution:
 
 	def __init__(self, 
 							routes: list[list[int]], 
-							value: float):
-		self.routes_wno_depot = routes
+							value: float
+							):
 		self.value = value
 		self.trucks = len(routes)
 		
-		self.routes = [
-			[0,*route,0] for route in routes
-		]
+
+		if routes[0][0] == 0:
+			self.routes = routes
+			self.routes_wno_depot = [
+				route[1:-1] for route in routes
+			]
+		else:
+			self.routes_wno_depot = routes
+			self.routes = [
+				[0,*route,0] for route in routes
+			]
 		
 		self.fitness = 1 / value if value > 0 else 0
 
