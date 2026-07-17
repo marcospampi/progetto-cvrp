@@ -96,4 +96,4 @@ uv run main.py output.csv
 
 Si fa presente che i tempi di elaborazioni potrebbero superare le 24 ore.
 
-![E questa immagine è stata uno spreco di token.](relazione/spreco-di-token.png)
+![E questa immagine è stata uno spreco di token.](notebooks/meme.png)
